@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>France 2027 — Trip Planner</title>
+  <!--
+  ═══════════════════════════════════════════════════════════════════════
+  SETUP (5 minutes, free):
+
+  1. Go to https://jsonbin.io and create a free account
+  2. Click "New Bin" — paste this as the initial content: {"responses":[]}
+  3. Copy the Bin ID shown in the URL (looks like: 6639f4e6ad19ca34f88b12c3)
+  4. Go to Account → API Keys → copy your Master Key
+  5. Paste both values into the two lines below:
+  ═══════════════════════════════════════════════════════════════════════
+  -->
+  <script>
+    const BIN_ID  = '6ac52f58ffd5d160535387ff';   // paste your Bin ID here
+    const API_KEY = '$2a$10$lAp95RQjyutxkzGlggKajO3b/c5Muvbwujt.pRTvziALEAbzM77F2';   // paste your Master Key here
+  </script>
+
+  <style>
+    :root {
+      --navy:  #1a2e5a;
+      --red:   #c8102e;
+      --gold:  #b8952a;
+      --light: #f7f5ef;
+      --white: #ffffff;
+      --gray:  #e4e1d8;
+      --text:  #2c2c2c;
+      --muted: #8a8070;
+      --green: #2a7a3b;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      background: var(--light);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--navy);
+      color: #fff;
+      padding: 36px 24px 0;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      font-weight: 300;
+      letter-spacing: 0.06em;
+    }
+
+    header h1 strong { font-weight: 700; color: #e8d48a; }
+
+    header p {
+      margin-top: 6px;
+      font-size: 0.9rem;
+      opacity: 0.65;
+      letter-spacing: 0.04em;
+    }
+
+    .tricolor {
+      display: flex;
+      height: 6px;
+      margin-top: 24px;
+    }
+    .tricolor div { flex: 1; }
+    .tc-blue  { background: #002395; }
+    .tc-white { background: #fff; }
+    .tc-red   { background: #ed2939; }
+
+    /* ── Layout ── */
+    main {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 32px 20px 64px;
+    }
+
+    .card {
+      background: var(--white);
+      border-radius: 10px;
+      padding: 28px;
+      margin-bottom: 28px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+    }
+
+    .card-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--navy);
+      padding-bottom: 12px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* ── Form ── */
+    .name-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .name-row label {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--navy);
+      white-space: nowrap;
+    }
+
+    input[type="text"] {
+      padding: 9px 14px;
+      border: 2px solid var(--gray);
+      border-radius: 6px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      outline: none;
+      width: 260px;
+      transition: border-color 0.15s;
+    }
+
+    input[type="text"]:focus { border-color: var(--navy); }
+
+    .legend {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+
+    .legend-swatch {
+      width: 14px; height: 14px;
+      border-radius: 3px;
+      border: 1.5px solid var(--gray);
+      background: var(--white);
+    }
+
+    .legend-swatch.conflict { background: var(--red); border-color: var(--red); }
+
+    /* ── Calendar ── */
+    .calendars {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 820px) {
+      .calendars { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 480px) {
+      .calendars { grid-template-columns: 1fr; }
+    }
+
+    .cal-month h3 {
+      text-align: center;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--navy);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+    }
+
+    .cal-dow {
+      font-size: 0.62rem;
+      text-align: center;
+      color: var(--muted);
+      font-weight: 600;
+      padding: 2px 0 4px;
+    }
+
+    .cal-day {
+      aspect-ratio: 1;
+      border: 1.5px solid var(--gray);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.1s, border-color 0.1s, color 0.1s;
+      background: var(--white);
+    }
+
+    .cal-day:hover:not(.inactive):not(.blank) {
+      border-color: var(--navy);
+      background: #eef1fa;
+    }
+
+    .cal-day.conflict {
+      background: var(--red);
+      border-color: #a0001e;
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .cal-day.inactive {
+      background: #f0ede6;
+      color: #ccc;
+      cursor: default;
+      border-color: #e8e4dc;
+    }
+
+    .cal-day.blank {
+      background: transparent;
+      border-color: transparent;
+      cursor: default;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 2px solid var(--gray);
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      resize: vertical;
+      min-height: 76px;
+      outline: none;
+      transition: border-color 0.15s;
+      margin-bottom: 18px;
+    }
+
+    textarea:focus { border-color: var(--navy); }
+
+    .field-label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--navy);
+      margin-bottom: 7px;
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      padding: 9px 22px;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      border: 2px solid transparent;
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background: var(--navy);
+      color: #fff;
+    }
+    .btn-primary:hover:not(:disabled) { background: #0e1d3a; }
+    .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--navy);
+      border-color: var(--navy);
+    }
+    .btn-ghost:hover { background: var(--navy); color: #fff; }
+
+    .btn-sm {
+      padding: 5px 14px;
+      font-size: 0.78rem;
+    }
+
+    .btn-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+    /* ── Group table ── */
+    .group-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    .group-table th {
+      background: var(--navy);
+      color: #fff;
+      padding: 9px 14px;
+      font-weight: 500;
+      font-size: 0.78rem;
+      text-align: left;
+      letter-spacing: 0.03em;
+    }
+
+    .group-table th:first-child { border-radius: 6px 0 0 0; }
+    .group-table th:last-child  { border-radius: 0 6px 0 0; }
+
+    .group-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--gray);
+      vertical-align: middle;
+    }
+
+    .group-table tbody tr:last-child td { border-bottom: none; }
+    .group-table tbody tr:hover td { background: #f5f7fc; }
+
+    /* ── Timeline bar ── */
+    .tl-wrap {
+      position: relative;
+      height: 22px;
+      background: #dff0e0;
+      border-radius: 4px;
+      overflow: hidden;
+      min-width: 240px;
+    }
+
+    .tl-marker {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      width: 1px;
+      background: rgba(0,0,0,0.12);
+    }
+
+    .tl-marker-label {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.58rem;
+      color: rgba(0,0,0,0.35);
+      font-weight: 600;
+      pointer-events: none;
+      padding-left: 3px;
+      letter-spacing: 0.03em;
+    }
+
+    .tl-block {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      background: var(--red);
+      opacity: 0.82;
+    }
+
+    .person-name { font-weight: 600; white-space: nowrap; }
+
+    .person-note {
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .conflict-count {
+      font-size: 0.75rem;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .no-responses {
+      text-align: center;
+      padding: 36px 0;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    /* ── Best windows ── */
+    .window-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 11px 0;
+      border-bottom: 1px solid var(--gray);
+      font-size: 0.85rem;
+    }
+
+    .window-row:last-child { border-bottom: none; }
+
+    .window-dates {
+      font-weight: 700;
+      color: var(--navy);
+      min-width: 180px;
+    }
+
+    .window-len {
+      color: var(--muted);
+      min-width: 60px;
+    }
+
+    .window-bar-wrap {
+      flex: 1;
+      height: 8px;
+      background: var(--gray);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .window-bar { height: 100%; border-radius: 4px; }
+
+    .window-label { font-size: 0.8rem; min-width: 130px; text-align: right; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--navy);
+      color: #fff;
+      padding: 11px 20px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.25s, transform 0.25s;
+      z-index: 999;
+      pointer-events: none;
+      max-width: 320px;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.err  { background: var(--red); }
+
+    .badge {
+      background: var(--navy);
+      color: #fff;
+      font-size: 0.7rem;
+      padding: 2px 10px;
+      border-radius: 10px;
+      font-weight: 700;
+    }
+
+    .setup-note {
+      background: #fffbe6;
+      border: 1.5px solid var(--gold);
+      border-radius: 7px;
+      padding: 14px 18px;
+      font-size: 0.82rem;
+      color: #6b5000;
+      margin-bottom: 28px;
+    }
+
+    .setup-note strong { color: #4a3700; }
+
+    .setup-note code {
+      background: rgba(0,0,0,0.07);
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>&#127467;&#127479; <strong>France 2027</strong> — Trip Planner</h1>
+  <p>Aug 15 – Nov 1, 2027 &nbsp;·&nbsp; Mark your conflicts, share your ideal trip</p>
+  <div class="tricolor">
+    <div class="tc-blue"></div>
+    <div class="tc-white"></div>
+    <div class="tc-red"></div>
+  </div>
+</header>
+
+<main>
+
+  <div id="setup-banner" class="setup-note" style="display:none">
+    <strong>Setup needed:</strong> Open this file, find the two lines near the top, and paste your
+    <code>BIN_ID</code> and <code>API_KEY</code> from <strong>jsonbin.io</strong>.
+    Until then, data is saved in <em>this browser only</em> and friends won't see each other's responses.
+    <a href="https://jsonbin.io" target="_blank" style="color:var(--gold)">Get a free account →</a>
+  </div>
+
+  <!-- ── Your Availability ───────────────────────────────────────────── -->
+  <div class="card">
+    <div class="card-title">Your Availability</div>
+
+    <div class="name-row">
+      <label for="name-input">Your name</label>
+      <input type="text" id="name-input" placeholder="First name + last initial" maxlength="40" autocomplete="name">
+      <button class="btn btn-ghost btn-sm" onclick="loadMyData()" title="Restores your last entry from this browser">
+        Restore my entry
+      </button>
+    </div>
+
+    <div class="legend">
+      <span>Click any day to toggle:</span>
+      <div class="legend-item">
+        <div class="legend-swatch"></div><span>Available / no conflict</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch conflict"></div><span>Conflict / unavailable</span>
+      </div>
+    </div>
+
+    <div class="calendars" id="calendars"></div>
+
+    <label class="field-label" for="notes-input">Ideal trip &amp; comments</label>
+    <textarea id="notes-input" placeholder="e.g. I'd love 10 days — Paris + Provence. Prefer not to travel Labor Day weekend. Open to any length as long as we get a full week…"></textarea>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" id="save-btn" onclick="submitResponse()">Save my availability</button>
+      <button class="btn btn-ghost" onclick="clearForm()">Clear</button>
+      <span id="save-status" style="font-size:0.78rem;color:var(--muted)"></span>
+    </div>
+  </div>
+
+  <!-- ── Group Overview ─────────────────────────────────────────────── -->
+  <div class="card">
+    <div class="card-title">
+      <span>Group Overview</span>
+      <div style="display:flex;gap:10px;align-items:center">
+        <span class="badge" id="resp-count">0 responses</span>
+        <button class="btn btn-ghost btn-sm" onclick="refreshData()">&#8635; Refresh</button>
+      </div>
+    </div>
+    <div id="group-view">
+      <div class="no-responses">No responses yet — be the first to save yours above.</div>
+    </div>
+  </div>
+
+  <!-- ── Best Windows ───────────────────────────────────────────────── -->
+  <div class="card">
+    <div class="card-title">Best Trip Windows</div>
+    <div id="best-windows">
+      <p style="color:var(--muted);font-size:0.85rem;font-style:italic">
+        Windows appear once responses are in. Looks for stretches of 5+ days where the most people are free.
+      </p>
+    </div>
+  </div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ── Date range ─────────────────────────────────────────────────────
+  const TRIP_START = new Date(2027, 7, 15);  // Aug 15
+  const TRIP_END   = new Date(2027, 10, 1);  // Nov 1
+  const TOTAL_DAYS = daysBetween(TRIP_START, TRIP_END); // 78
+
+  function daysBetween(a, b) {
+    return Math.round((b - a) / 86400000);
+  }
+
+  function dateKey(d) {
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  }
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+
+  function shiftDate(base, days) {
+    return new Date(base.getTime() + days * 86400000);
+  }
+
+  function fmtDate(d) {
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  // ── State ──────────────────────────────────────────────────────────
+  let myConflicts = new Set();
+
+  // ── Show setup banner if not configured ───────────────────────────
+  if (!BIN_ID || !API_KEY) {
+    document.getElementById('setup-banner').style.display = 'block';
+  }
+
+  // ── Calendar ───────────────────────────────────────────────────────
+  const MONTHS = [
+    { year: 2027, month: 7,  label: 'August 2027'    },
+    { year: 2027, month: 8,  label: 'September 2027' },
+    { year: 2027, month: 9,  label: 'October 2027'   },
+    { year: 2027, month: 10, label: 'November 2027'  },
+  ];
+
+  function buildCalendars() {
+    const root = document.getElementById('calendars');
+    root.innerHTML = '';
+    MONTHS.forEach(m => root.appendChild(buildMonth(m.year, m.month, m.label)));
+  }
+
+  function buildMonth(year, month, label) {
+    const wrap = document.createElement('div');
+    wrap.className = 'cal-month';
+
+    const h3 = document.createElement('h3');
+    h3.textContent = label;
+    wrap.appendChild(h3);
+
+    const grid = document.createElement('div');
+    grid.className = 'cal-grid';
+
+    ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(d => {
+      const el = document.createElement('div');
+      el.className = 'cal-dow';
+      el.textContent = d;
+      grid.appendChild(el);
+    });
+
+    const firstDow = new Date(year, month, 1).getDay();
+    for (let i = 0; i < firstDow; i++) {
+      const blank = document.createElement('div');
+      blank.className = 'cal-day blank';
+      grid.appendChild(blank);
+    }
+
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date = new Date(year, month, d);
+      const key  = dateKey(date);
+      const cell = document.createElement('div');
+      cell.className = 'cal-day';
+      cell.textContent = d;
+      cell.dataset.key = key;
+
+      if (date < TRIP_START || date > TRIP_END) {
+        cell.classList.add('inactive');
+      } else {
+        if (myConflicts.has(key)) cell.classList.add('conflict');
+        cell.addEventListener('click', () => {
+          if (myConflicts.has(key)) {
+            myConflicts.delete(key);
+            cell.classList.remove('conflict');
+          } else {
+            myConflicts.add(key);
+            cell.classList.add('conflict');
+          }
+        });
+      }
+
+      grid.appendChild(cell);
+    }
+
+    wrap.appendChild(grid);
+    return wrap;
+  }
+
+  function syncCalendarUI() {
+    document.querySelectorAll('.cal-day[data-key]').forEach(cell => {
+      if (!cell.classList.contains('inactive')) {
+        cell.classList.toggle('conflict', myConflicts.has(cell.dataset.key));
+      }
+    });
+  }
+
+  // ── JSONbin storage ────────────────────────────────────────────────
+  async function loadResponses() {
+    if (BIN_ID && API_KEY) {
+      try {
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+          headers: { 'X-Master-Key': API_KEY }
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        return data.record.responses || [];
+      } catch (e) {
+        console.error('JSONbin read error:', e);
+        toast('Could not reach shared storage — showing local data only.', true);
+      }
+    }
+    return localLoad();
+  }
+
+  async function saveResponses(responses) {
+    if (BIN_ID && API_KEY) {
+      try {
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Master-Key': API_KEY,
+            'X-Bin-Versioning': 'false'
+          },
+          body: JSON.stringify({ responses })
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return true;
+      } catch (e) {
+        console.error('JSONbin write error:', e);
+        toast('Could not save to shared storage. Saved locally instead.', true);
+        localSave(responses);
+        return false;
+      }
+    }
+    localSave(responses);
+    return true;
+  }
+
+  function localLoad() {
+    try {
+      const s = localStorage.getItem('france2027_data');
+      return s ? JSON.parse(s).responses || [] : [];
+    } catch { return []; }
+  }
+
+  function localSave(responses) {
+    localStorage.setItem('france2027_data', JSON.stringify({ responses }));
+  }
+
+  // ── Submit ─────────────────────────────────────────────────────────
+  async function submitResponse() {
+    const name = document.getElementById('name-input').value.trim();
+    if (!name) { toast('Please enter your name first.', true); return; }
+
+    const btn = document.getElementById('save-btn');
+    const status = document.getElementById('save-status');
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+    status.textContent = '';
+
+    const existing = await loadResponses();
+    const idx = existing.findIndex(r => r.name.toLowerCase() === name.toLowerCase());
+
+    const entry = {
+      name,
+      conflicts: [...myConflicts].sort(),
+      notes: document.getElementById('notes-input').value.trim(),
+      savedAt: new Date().toISOString()
+    };
+
+    if (idx >= 0) existing[idx] = entry;
+    else existing.push(entry);
+
+    await saveResponses(existing);
+
+    // Cache locally so "Restore" works
+    localStorage.setItem('france2027_me', JSON.stringify(entry));
+
+    btn.disabled = false;
+    btn.textContent = 'Save my availability';
+    const n = entry.conflicts.length;
+    status.textContent = n === 0 ? 'Saved — no conflicts marked.' : `Saved — ${n} conflict day${n !== 1 ? 's' : ''} marked.`;
+
+    toast(`Saved! Thanks, ${name.split(' ')[0]}.`);
+    renderGroupView(existing);
+  }
+
+  // ── Restore ────────────────────────────────────────────────────────
+  function loadMyData() {
+    const stored = localStorage.getItem('france2027_me');
+    if (!stored) {
+      toast('No previous entry found in this browser.', true);
+      return;
+    }
+    const entry = JSON.parse(stored);
+    const nameEl = document.getElementById('name-input');
+    if (!nameEl.value.trim() || nameEl.value.trim().toLowerCase() === entry.name.toLowerCase()) {
+      nameEl.value = entry.name;
+    }
+    document.getElementById('notes-input').value = entry.notes || '';
+    myConflicts = new Set(entry.conflicts || []);
+    syncCalendarUI();
+    toast(`Restored your entry as ${entry.name}.`);
+  }
+
+  function clearForm() {
+    myConflicts = new Set();
+    document.getElementById('notes-input').value = '';
+    document.getElementById('save-status').textContent = '';
+    syncCalendarUI();
+  }
+
+  async function refreshData() {
+    const responses = await loadResponses();
+    renderGroupView(responses);
+    toast('Refreshed.');
+  }
+
+  // ── Group view ─────────────────────────────────────────────────────
+  function renderGroupView(responses) {
+    const countEl = document.getElementById('resp-count');
+    countEl.textContent = `${responses.length} response${responses.length !== 1 ? 's' : ''}`;
+
+    const container = document.getElementById('group-view');
+    if (!responses.length) {
+      container.innerHTML = '<div class="no-responses">No responses yet — be the first to save yours above.</div>';
+      renderBestWindows([]);
+      return;
+    }
+
+    // Month boundary offsets for timeline markers
+    const markers = [
+      { label: 'Sep', days: daysBetween(TRIP_START, new Date(2027, 8, 1)) },
+      { label: 'Oct', days: daysBetween(TRIP_START, new Date(2027, 9, 1)) },
+    ];
+
+    const sorted = [...responses].sort((a, b) => a.name.localeCompare(b.name));
+
+    const table = document.createElement('table');
+    table.className = 'group-table';
+
+    const thead = table.createTHead();
+    const hr = thead.insertRow();
+    ['Name', 'Availability  (Aug 15 – Nov 1)', 'Days out', 'Notes / Ideal trip'].forEach(h => {
+      const th = document.createElement('th');
+      th.textContent = h;
+      hr.appendChild(th);
+    });
+
+    const tbody = table.createTBody();
+
+    sorted.forEach(r => {
+      const row = tbody.insertRow();
+
+      // Name
+      const td0 = row.insertCell();
+      td0.innerHTML = `<span class="person-name">${esc(r.name)}</span>`;
+
+      // Timeline
+      const td1 = row.insertCell();
+      const tlWrap = document.createElement('div');
+      tlWrap.className = 'tl-wrap';
+
+      markers.forEach(mk => {
+        const pct = (mk.days / TOTAL_DAYS) * 100;
+        const line = document.createElement('div');
+        line.className = 'tl-marker';
+        line.style.left = `${pct}%`;
+        tlWrap.appendChild(line);
+
+        const lbl = document.createElement('div');
+        lbl.className = 'tl-marker-label';
+        lbl.style.left = `${pct}%`;
+        lbl.textContent = mk.label;
+        tlWrap.appendChild(lbl);
+      });
+
+      const conflictSet = new Set(r.conflicts);
+      for (let i = 0; i < TOTAL_DAYS; i++) {
+        const key = dateKey(shiftDate(TRIP_START, i));
+        if (conflictSet.has(key)) {
+          const block = document.createElement('div');
+          block.className = 'tl-block';
+          block.style.left  = `${(i / TOTAL_DAYS) * 100}%`;
+          block.style.width = `${(1 / TOTAL_DAYS) * 100 + 0.1}%`;
+          tlWrap.appendChild(block);
+        }
+      }
+
+      td1.appendChild(tlWrap);
+
+      // Days out
+      const td2 = row.insertCell();
+      const n = r.conflicts.length;
+      td2.innerHTML = `<span class="conflict-count">${n > 0 ? n : '—'}</span>`;
+
+      // Notes
+      const td3 = row.insertCell();
+      td3.innerHTML = r.notes
+        ? `<span class="person-note">${esc(r.notes)}</span>`
+        : '<span style="color:var(--muted);font-size:0.78rem">—</span>';
+    });
+
+    container.innerHTML = '';
+    container.appendChild(table);
+
+    renderBestWindows(responses);
+  }
+
+  // ── Best windows ───────────────────────────────────────────────────
+  function renderBestWindows(responses) {
+    const container = document.getElementById('best-windows');
+    if (!responses.length) {
+      container.innerHTML = '<p style="color:var(--muted);font-size:0.85rem;font-style:italic">Windows appear once responses are in.</p>';
+      return;
+    }
+
+    // For each day, count how many people have a conflict
+    const conflictCounts = [];
+    for (let i = 0; i < TOTAL_DAYS; i++) {
+      const key = dateKey(shiftDate(TRIP_START, i));
+      let n = 0;
+      responses.forEach(r => { if (new Set(r.conflicts).has(key)) n++; });
+      conflictCounts.push(n);
+    }
+
+    // Find all runs where fewer than ALL people have conflicts (sliding window)
+    const total = responses.length;
+    const MIN_LEN = 5;
+    const windows = [];
+
+    let i = 0;
+    while (i < TOTAL_DAYS) {
+      // skip fully-blocked days
+      if (conflictCounts[i] === total) { i++; continue; }
+      let j = i;
+      while (j < TOTAL_DAYS && conflictCounts[j] < total) j++;
+      const len = j - i;
+      if (len >= MIN_LEN) {
+        // Best availability % within this window
+        const maxConflicts = Math.max(...conflictCounts.slice(i, j));
+        const minConflicts = Math.min(...conflictCounts.slice(i, j));
+        windows.push({
+          start: shiftDate(TRIP_START, i),
+          end:   shiftDate(TRIP_START, j - 1),
+          len,
+          maxConflicts,
+          minConflicts,
+          avgFree: conflictCounts.slice(i, j).reduce((s, c) => s + (1 - c/total), 0) / len
+        });
+      }
+      i = j + 1;
+    }
+
+    // Sort: fewest max conflicts first, then longest
+    windows.sort((a, b) => a.maxConflicts - b.maxConflicts || b.len - a.len);
+    const top = windows.slice(0, 6);
+
+    if (!top.length) {
+      container.innerHTML = '<p style="color:var(--muted);font-size:0.85rem">No window of 5+ days found yet — add more responses or loosen conflicts.</p>';
+      return;
+    }
+
+    container.innerHTML = '';
+    top.forEach(w => {
+      const pctFree = Math.round(100 * (1 - w.maxConflicts / total));
+      const allFree = w.maxConflicts === 0;
+      const barColor = allFree ? '#2a7a3b' : (pctFree >= 70 ? var_gold() : '#c0760a');
+
+      const row = document.createElement('div');
+      row.className = 'window-row';
+      row.innerHTML = `
+        <div class="window-dates">${fmtDate(w.start)} – ${fmtDate(w.end)}</div>
+        <div class="window-len">${w.len} days</div>
+        <div class="window-bar-wrap">
+          <div class="window-bar" style="width:${pctFree}%;background:${barColor}"></div>
+        </div>
+        <div class="window-label" style="color:${barColor};font-weight:600">
+          ${allFree ? '✓ Everyone free' : `${pctFree}% availability`}
+        </div>
+      `;
+      container.appendChild(row);
+    });
+  }
+
+  function var_gold() { return '#b8952a'; }
+
+  // ── Utilities ──────────────────────────────────────────────────────
+  function esc(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  let toastTimer;
+  function toast(msg, isErr = false) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast show' + (isErr ? ' err' : '');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { el.className = 'toast'; }, 3500);
+  }
+
+  // ── Init ───────────────────────────────────────────────────────────
+  async function init() {
+    buildCalendars();
+    const responses = await loadResponses();
+    renderGroupView(responses);
+  }
+
+  init();
+</script>
+</body>
+</html>
